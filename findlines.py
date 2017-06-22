@@ -25,13 +25,22 @@ class Findlines(object):
         cv2.fillPoly(mask, vertices, ignore_mask_color)
         masked_edges = cv2.bitwise_and(edges, mask)
         return masked_edges
+    def get_canny_edge(self, gray,verticle_lines = True):
+        
+        low_threshold = 40
+        high_threshold = 140
+        if not verticle_lines:
+            high_threshold = 180
+
+        edges = cv2.Canny(gray, low_threshold, high_threshold)
+        return edges
     def get_hough_lines(self, edges, verticle_lines = True):
         rho = 1
         theta = np.pi/180
         threshold = 10
         min_line_length = 30
         if not verticle_lines:
-            min_line_length = 150
+            min_line_length = 120
         max_line_gap = 5
         
         color_edges = np.dstack((edges, edges, edges)) 
@@ -84,35 +93,36 @@ class Findlines(object):
       
         edges = self.get_canny_edge(gray)
         hough_lines,line_values = self.get_hough_lines(edges)
-        left = int(line_values[line_values < 100].mean())
-        right = int(line_values[line_values > 1500].mean())
+        
+        try:
+            left = int(line_values[line_values < 300].mean())
+        except:
+            left = None
+            
+        try:
+            right = int(line_values[line_values > 1500].mean())
+        except:
+            right = None
+                
+            
         
         return edges, hough_lines, left, right
     def get_horizatal_lines(self,gray):
       
         edges = self.get_canny_edge(gray)
         hough_lines,line_values = self.get_hough_lines(edges, verticle_lines = False)
-        top = int(line_values[line_values < 80].mean())
-        bottom = int(line_values[line_values > 20].mean())
+        
+        try:
+            middle = line_values.mean()
+            top = int(line_values[line_values < middle].mean())
+            bottom = int(line_values[line_values > middle].mean())
+        except:
+            top = None
+            bottom = None
         
         return edges, hough_lines, top, bottom
-    def get_canny_edge(self, gray,verticle_lines = True):
-        # Convert to grayscale
-
-#         plt.imshow(gray_show[...,::-1])
-#         kernel_size = 5
-#         blur_gray = cv2.GaussianBlur(gray,(kernel_size, kernel_size), 0)
-#         
-#         blur_gray = (blur_gray * 255).astype(np.uint8)
-        
-        low_threshold = 90
-        high_threshold = 150
-        if not verticle_lines:
-            high_threshold = 180
-
-        edges = cv2.Canny(gray, low_threshold, high_threshold)
-        return edges
-    def find_lines(self, fname):
+   
+    def find_lines(self, fname, raise_exception = True):
         img = cv2.imread(fname)
         img = cv2.resize(img, (2100,1276))
         
@@ -123,18 +133,34 @@ class Findlines(object):
         
 #         vertices = np.array([[(210,250),(1880,210), (1880,315), (210,315)]], dtype=np.int32)
 #         img = self.crop_roi(img, vertices)
-        img = img[210:330, 160:1950]
+        img = img[210:330, 100:2000]
         gray = edges =hough_lines = img
 #         plt.imshow(img[...,::-1])
         
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 #         channels = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 #         gray = channels[:,:,1]
-#         edges, hough_lines, left, right = self.get_verticle_lines(gray)
-#         print("line value {}, {}".format(left, right))
+        edges, hough_lines, left, right = self.get_verticle_lines(gray)
+        print("line value,verticle {}, {}".format(left, right))
+        
+        if (left is None) or (right is None):
+            if raise_exception:
+                raise("ko")
+            return img, gray,edges,hough_lines
+            
         
         edges, hough_lines, top, bottom = self.get_horizatal_lines(gray)
         print("line value, horizatal {}, {}".format(top, bottom))
+        if (top is None) or (bottom is None):
+            if raise_exception:
+                raise("ko")
+            return img, gray,edges,hough_lines
+        
+        
+        
+        hough_lines = img.copy()
+        cv2.rectangle(hough_lines,(left,top),(right,bottom),(255,0,0),10)
+       
         
         
         
@@ -181,7 +207,10 @@ class Findlines(object):
         region_folder = './data/regions/'
         if not os.path.exists(region_folder):
             os.makedirs(region_folder)
+        count = 0
         for fname in fnames:
+            count += 1
+            print("{}, {}".format(count, fname))
             img, gray,edges,hough_lines = self.find_lines(fname)
             file_path = region_folder + os.path.basename(fname)
             plt.imsave(file_path, img[...,::-1])
@@ -192,13 +221,13 @@ class Findlines(object):
     def run(self):
 #         return self.save_all_regions()
         
-        fnames = ['./data/ocr/00000012AI20160328023.jpg']
+        fnames = ['./data/ocr/00000014AI20160325028.jpg']
 
         
-        fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
-                  './data/ocr/00000021AI20160329001.jpg','./data/ocr/00000026AI20160329003.jpg',
-                  './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
-                  './data/ocr/00000026AI20160325020.jpg']
+#         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
+#                   './data/ocr/00000021AI20160329001.jpg','./data/ocr/00000026AI20160329003.jpg',
+#                   './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
+#                   './data/ocr/00000026AI20160325020.jpg']
 #         fnames = ['./data/ocr/00000030AI20160329003.jpg']
          
 #         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
@@ -207,7 +236,7 @@ class Findlines(object):
         res_imgs = []
         for fname in fnames:
             print("image {}".format(fname))
-            img, gray,edges,hough_lines = self.find_lines(fname)
+            img, gray,edges,hough_lines = self.find_lines(fname, raise_exception = False)
             res_imgs.append(self.stack_image_horizontal([img,edges, hough_lines]))
            
         
