@@ -27,9 +27,11 @@ class Findlines(object):
         return masked_edges
     def get_canny_edge(self, gray,verticle_lines = True):
         
-        low_threshold = 40
-        high_threshold = 140
-        if not verticle_lines:
+        if verticle_lines:
+            low_threshold = 70
+            high_threshold = 180
+        else:
+            low_threshold = 90
             high_threshold = 180
 
         edges = cv2.Canny(gray, low_threshold, high_threshold)
@@ -38,9 +40,11 @@ class Findlines(object):
         rho = 1
         theta = np.pi/180
         threshold = 10
-        min_line_length = 30
-        if not verticle_lines:
-            min_line_length = 120
+        
+        if verticle_lines:
+            min_line_length = 70
+        else:
+            min_line_length = 100
         max_line_gap = 5
         
         color_edges = np.dstack((edges, edges, edges)) 
@@ -89,8 +93,14 @@ class Findlines(object):
         plt.imshow(combo)
         
         return combo,np.array(line_values)
-    def get_verticle_lines(self,gray):
-      
+    def get_verticle_lines(self,img):
+        
+        base_width = 1900
+        base_height = 500
+        img = img[self.base_y:(self.base_y + base_height), self.base_x:(self.base_x + base_width)]
+        
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
         edges = self.get_canny_edge(gray)
         hough_lines,line_values = self.get_hough_lines(edges)
         
@@ -106,10 +116,18 @@ class Findlines(object):
                 
             
         
-        return edges, hough_lines, left, right
-    def get_horizatal_lines(self,gray):
+        return img, gray, edges, hough_lines, left, right
+    def get_horizatal_lines(self,img):
       
-        edges = self.get_canny_edge(gray)
+        base_width = 1900
+        base_height = 120
+        img = img[self.base_y:(self.base_y + base_height), self.base_x:(self.base_x + base_width)]
+        
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        edges = self.get_canny_edge(gray, verticle_lines = False)
+        
+        
         hough_lines,line_values = self.get_hough_lines(edges, verticle_lines = False)
         
         try:
@@ -120,45 +138,38 @@ class Findlines(object):
             top = None
             bottom = None
         
-        return edges, hough_lines, top, bottom
+        return img, gray, edges, hough_lines, top, bottom
    
     def find_lines(self, fname, raise_exception = True):
         img = cv2.imread(fname)
         img = cv2.resize(img, (2100,1276))
+        self.base_x = 100
+        self.base_y = 210
         
-        
-        
-        
-        #crop region of interest
-        
-#         vertices = np.array([[(210,250),(1880,210), (1880,315), (210,315)]], dtype=np.int32)
-#         img = self.crop_roi(img, vertices)
-        img = img[210:330, 100:2000]
-        gray = edges =hough_lines = img
-#         plt.imshow(img[...,::-1])
-        
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        resized_img = img.copy()
+       
 #         channels = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 #         gray = channels[:,:,1]
-        edges, hough_lines, left, right = self.get_verticle_lines(gray)
+
+
+        img, gray, edges, hough_lines, left, right = self.get_verticle_lines(resized_img)
         print("line value,verticle {}, {}".format(left, right))
-        
+         
         if (left is None) or (right is None):
             if raise_exception:
                 raise("ko")
             return img, gray,edges,hough_lines
             
         
-        edges, hough_lines, top, bottom = self.get_horizatal_lines(gray)
+        img, gray, edges, hough_lines, top, bottom = self.get_horizatal_lines(resized_img)
         print("line value, horizatal {}, {}".format(top, bottom))
         if (top is None) or (bottom is None):
             if raise_exception:
                 raise("ko")
             return img, gray,edges,hough_lines
+         
         
-        
-        
-        hough_lines = img.copy()
+        hough_lines = resized_img[210:330, 100:2000]
         cv2.rectangle(hough_lines,(left,top),(right,bottom),(255,0,0),10)
        
         
@@ -213,19 +224,19 @@ class Findlines(object):
             print("{}, {}".format(count, fname))
             img, gray,edges,hough_lines = self.find_lines(fname)
             file_path = region_folder + os.path.basename(fname)
-            plt.imsave(file_path, img[...,::-1])
+            plt.imsave(file_path, hough_lines[...,::-1])
             
             
         return
         
     def run(self):
-#         return self.save_all_regions()
+        return self.save_all_regions()
         
-        fnames = ['./data/ocr/00000014AI20160325028.jpg']
+        fnames = ['./data/ocr/00000016AI20160127014.jpg']
 
         
 #         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
-#                   './data/ocr/00000021AI20160329001.jpg','./data/ocr/00000026AI20160329003.jpg',
+#                   './data/ocr/00000015AI20160127014.jpg','./data/ocr/00000026AI20160329003.jpg',
 #                   './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
 #                   './data/ocr/00000026AI20160325020.jpg']
 #         fnames = ['./data/ocr/00000030AI20160329003.jpg']
