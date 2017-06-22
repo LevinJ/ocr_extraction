@@ -169,8 +169,15 @@ class Findlines(object):
             return img, gray,edges,hough_lines
          
         
-        hough_lines = resized_img[210:330, 100:2000]
-        cv2.rectangle(hough_lines,(left,top),(right,bottom),(255,0,0),10)
+        base_width = 1900
+        base_height = 120
+        img = (resized_img[self.base_y:(self.base_y + base_height), self.base_x:(self.base_x + base_width)]).copy()
+       
+#         hough_lines = img.copy()
+#         cv2.rectangle(hough_lines,(left,top),(right,bottom),(255,0,0),10)
+
+        hough_lines = img[(top-0):(bottom + 10), left:right]
+        hough_lines = cv2.resize(hough_lines, (base_width,base_height))
        
         
         
@@ -232,7 +239,7 @@ class Findlines(object):
     def run(self):
         return self.save_all_regions()
         
-        fnames = ['./data/ocr/00000016AI20160127014.jpg']
+        fnames = ['./data/ocr/00000012AI20160328023.jpg']
 
         
 #         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
@@ -248,7 +255,7 @@ class Findlines(object):
         for fname in fnames:
             print("image {}".format(fname))
             img, gray,edges,hough_lines = self.find_lines(fname, raise_exception = False)
-            res_imgs.append(self.stack_image_horizontal([img,edges, hough_lines]))
+            res_imgs.append(self.stack_image_horizontal([hough_lines]))
            
         
         res_imgs = self.stack_image_vertical(res_imgs)
