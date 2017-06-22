@@ -32,11 +32,12 @@ class FieldLocation(Findlines):
         return
     def show_channels(self):
         fname = './data/ocr/00000012AI20160328023.jpg'
+        fname = './data/ocr/00000030AI20160329003.jpg'
         img, gray,edges,hough_lines = self.find_lines(fname)
         
         channels = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        channels = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
-        channels = cv2.cvtColor(img, cv2.COLOR_BGR2Lab) #looks very good< L
+#         channels = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
+#         channels = cv2.cvtColor(img, cv2.COLOR_BGR2Lab) #looks very good< L
 #         channels = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
 #         channels = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 #         plt.imshow(channels[:,:,1],cmap='gray')
