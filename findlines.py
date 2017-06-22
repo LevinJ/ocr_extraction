@@ -31,7 +31,7 @@ class Findlines(object):
         threshold = 10
         min_line_length = 30
         if not verticle_lines:
-            min_line_length = 100
+            min_line_length = 150
         max_line_gap = 5
         
         color_edges = np.dstack((edges, edges, edges)) 
@@ -92,11 +92,11 @@ class Findlines(object):
       
         edges = self.get_canny_edge(gray)
         hough_lines,line_values = self.get_hough_lines(edges, verticle_lines = False)
-        top = int(line_values[line_values < 100].mean())
-        bottom = int(line_values[line_values > 100].mean())
+        top = int(line_values[line_values < 80].mean())
+        bottom = int(line_values[line_values > 20].mean())
         
         return edges, hough_lines, top, bottom
-    def get_canny_edge(self, gray):
+    def get_canny_edge(self, gray,verticle_lines = True):
         # Convert to grayscale
 
 #         plt.imshow(gray_show[...,::-1])
@@ -107,6 +107,8 @@ class Findlines(object):
         
         low_threshold = 90
         high_threshold = 150
+        if not verticle_lines:
+            high_threshold = 180
 
         edges = cv2.Canny(gray, low_threshold, high_threshold)
         return edges
@@ -193,10 +195,10 @@ class Findlines(object):
         fnames = ['./data/ocr/00000012AI20160328023.jpg']
 
         
-#         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
-#                   './data/ocr/00000021AI20160329001.jpg','./data/ocr/00000026AI20160329003.jpg',
-#                   './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
-#                   './data/ocr/00000026AI20160325020.jpg']
+        fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
+                  './data/ocr/00000021AI20160329001.jpg','./data/ocr/00000026AI20160329003.jpg',
+                  './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
+                  './data/ocr/00000026AI20160325020.jpg']
 #         fnames = ['./data/ocr/00000030AI20160329003.jpg']
          
 #         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
