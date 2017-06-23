@@ -23,8 +23,9 @@ class FieldLocation(Findlines):
         fname = './data/ocr/00000012AI20160328023.jpg'
         img, gray,edges,hough_lines = self.find_lines(fname)
         
-        hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        self.hsv_img = hsv_img 
+        channels = cv2.cvtColor(hough_lines, cv2.COLOR_BGR2HSV)
+        channels = cv2.cvtColor(hough_lines, cv2.COLOR_BGR2Lab)
+        self.hsv_img = channels 
         _, ax = plt.subplots()
         ax.format_coord = self.format_coord
         ax.imshow(img[...,::-1])
@@ -35,9 +36,9 @@ class FieldLocation(Findlines):
         fname = './data/ocr/00000030AI20160329003.jpg'
         img, gray,edges,hough_lines = self.find_lines(fname)
         
-        channels = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+#         channels = cv2.cvtColor(hough_lines, cv2.COLOR_BGR2HSV)
 #         channels = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
-#         channels = cv2.cvtColor(img, cv2.COLOR_BGR2Lab) #looks very good< L
+        channels = cv2.cvtColor(hough_lines, cv2.COLOR_BGR2Lab) #looks very good< L
 #         channels = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
 #         channels = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 #         plt.imshow(channels[:,:,1],cmap='gray')
@@ -45,24 +46,42 @@ class FieldLocation(Findlines):
         plt.imshow(channels_img[...,::-1])
         plt.show()
         return
+    def find_fields(self, fname, raise_exception = True):
+        img, gray,edges,hough_lines = self.find_lines(fname, raise_exception = raise_exception)
+        
+        self.fields = hough_lines.copy()
+        name_pos = 380
+        sex_pos = 560
+        type_pos = 1230
+        
+        
+        cv2.line(self.fields,(name_pos,0),(name_pos,119),(255,0,0),10)
+        cv2.line(self.fields,(sex_pos,0),(sex_pos,119),(255,0,0),10)
+        cv2.line(self.fields,(type_pos,0),(type_pos,119),(255,0,0),10)
+        return
     
     def run(self):
-        return self.show_channels()
-        return self.show_pixel_values()
+        self.show_pixel_values()
+        self.show_channels()
+#         return self.save_all_regions()
         
-        fnames = ['./data/ocr/00000012AI20160328023.jpg']
+        fnames = ['./data/ocr/00000030AI20160329003.jpg']
 
         
-        fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
-                  './data/ocr/00000021AI20160329001.jpg','./data/ocr/00000026AI20160329003.jpg','./data/ocr/00000031AI20160325010.jpg']
+#         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
+#                   './data/ocr/00000015AI20160127014.jpg','./data/ocr/00000026AI20160329003.jpg',
+#                   './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
+#                   './data/ocr/00000026AI20160325020.jpg']
+#         fnames = ['./data/ocr/00000030AI20160329003.jpg']
          
 #         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
 #                   './data/ocr/00000021AI20160329001.jpg']
 
         res_imgs = []
         for fname in fnames:
-            img, gray,edges,hough_lines = self.find_lines(fname)
-            res_imgs.append(self.stack_image_horizontal([img]))
+            print("image {}".format(fname))
+            self.find_fields(fname, raise_exception = False)
+            res_imgs.append(self.stack_image_horizontal([self.fields]))
            
         
         res_imgs = self.stack_image_vertical(res_imgs)
