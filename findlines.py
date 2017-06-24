@@ -43,9 +43,11 @@ class Findlines(object):
         
         if verticle_lines:
             min_line_length = 70
+            max_line_gap = 5
         else:
-            min_line_length = 100
-        max_line_gap = 5
+            min_line_length = 115
+            max_line_gap = 3
+        
         
         color_edges = np.dstack((edges, edges, edges)) 
         line_image = np.copy(color_edges)*0 #creating a blank to draw lines on
@@ -90,7 +92,7 @@ class Findlines(object):
         #creating a "color" binary image to combine with line image     
         #drawing the lines on the edge image
         combo = cv2.addWeighted(color_edges, 0.8, line_image, 1, 0)
-        plt.imshow(combo)
+#         plt.imshow(combo)
         
         return combo,np.array(line_values)
     def get_verticle_lines(self,img):
@@ -175,10 +177,11 @@ class Findlines(object):
        
 #         hough_lines = img.copy()
 #         cv2.rectangle(hough_lines,(left,top),(right,bottom),(255,0,0),10)
-
-        hough_lines = img[(top-0):(bottom + 10), left:right]
-        hough_lines = cv2.resize(hough_lines, (base_width,base_height))
+        
        
+        hough_lines = img[(top):(bottom), left:right]
+        hough_lines = cv2.resize(hough_lines, (base_width,base_height))
+        
         
         
         
@@ -239,13 +242,13 @@ class Findlines(object):
     def run(self):
         return self.save_all_regions()
         
-        fnames = ['./data/ocr/00000012AI20160328023.jpg']
+        fnames = ['./data/ocr/00000015AI20160324002.jpg']
 
         
-#         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
-#                   './data/ocr/00000015AI20160127014.jpg','./data/ocr/00000026AI20160329003.jpg',
-#                   './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
-#                   './data/ocr/00000026AI20160325020.jpg']
+        fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
+                  './data/ocr/00000015AI20160127014.jpg','./data/ocr/00000026AI20160329003.jpg',
+                  './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
+                  './data/ocr/00000026AI20160325020.jpg']
 #         fnames = ['./data/ocr/00000030AI20160329003.jpg']
          
 #         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
@@ -255,7 +258,7 @@ class Findlines(object):
         for fname in fnames:
             print("image {}".format(fname))
             img, gray,edges,hough_lines = self.find_lines(fname, raise_exception = False)
-            res_imgs.append(self.stack_image_horizontal([hough_lines]))
+            res_imgs.append(self.stack_image_horizontal([img, edges, hough_lines]))
            
         
         res_imgs = self.stack_image_vertical(res_imgs)
