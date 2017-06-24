@@ -24,9 +24,9 @@ class FieldLocation(Findlines):
         fname = './data/ocr/00000030AI20160329003.jpg'
         img, gray,edges,hough_lines = self.find_lines(fname)
         
-        channels = cv2.cvtColor(hough_lines, cv2.COLOR_BGR2HLS)
+#         channels = cv2.cvtColor(hough_lines, cv2.COLOR_BGR2HLS)
 #         channels = cv2.cvtColor(hough_lines, cv2.COLOR_BGR2HSV)
-#         channels = cv2.cvtColor(hough_lines, cv2.COLOR_BGR2Lab)
+        channels = cv2.cvtColor(hough_lines, cv2.COLOR_BGR2Lab)
         self.hsv_img = channels 
         _, ax = plt.subplots()
         ax.format_coord = self.format_coord
@@ -52,24 +52,35 @@ class FieldLocation(Findlines):
         self.gray = gray
 
         return
+    def find_names(self, region):
+        field_pos = 380
+        field = self.fields[:, 0:380]
+        
+        
+        self.field_name = field
+        
+        return
     def find_fields(self, fname, raise_exception = True):
         img, gray,edges,hough_lines = self.find_lines(fname, raise_exception = raise_exception)
         
         self.fields = hough_lines.copy()
-        name_pos = 380
-        sex_pos = 560
-        type_pos = 1230
+        self.find_names(hough_lines.copy())
+        self.hough_lines = hough_lines
+        
+#         name_pos = 380
+#         sex_pos = 560
+#         type_pos = 1230
         
 #         channels = cv2.cvtColor(hough_lines, cv2.COLOR_BGR2Lab)
 #         self.thresholded = cv2.inRange(channels, (0,0,0), (160,255,255))
         
-        channels = cv2.cvtColor(hough_lines, cv2.COLOR_BGR2HLS)
-        self.thresholded = cv2.inRange(channels, (0,0,0), (255,160,50))
-        
-        
-        cv2.line(self.fields,(name_pos,0),(name_pos,119),(255,0,0),10)
-        cv2.line(self.fields,(sex_pos,0),(sex_pos,119),(255,0,0),10)
-        cv2.line(self.fields,(type_pos,0),(type_pos,119),(255,0,0),10)
+#         channels = cv2.cvtColor(hough_lines, cv2.COLOR_BGR2HLS)
+#         self.thresholded = cv2.inRange(channels, (0,0,0), (255,160,50))
+#         
+#         
+#         cv2.line(self.fields,(name_pos,0),(name_pos,119),(255,0,0),10)
+#         cv2.line(self.fields,(sex_pos,0),(sex_pos,119),(255,0,0),10)
+#         cv2.line(self.fields,(type_pos,0),(type_pos,119),(255,0,0),10)
         return
     
     def run(self):
@@ -77,13 +88,13 @@ class FieldLocation(Findlines):
         
 #         return self.save_all_regions()
         
-        fnames = ['./data/ocr/00000026AI20160325020.jpg']
+        fnames = ['./data/ocr/00000031AI20160325010.jpg']
 
         
-        fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
-                  './data/ocr/00000015AI20160127014.jpg','./data/ocr/00000026AI20160329003.jpg',
-                  './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
-                  './data/ocr/00000026AI20160325020.jpg']
+#         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
+#                   './data/ocr/00000015AI20160127014.jpg','./data/ocr/00000026AI20160329003.jpg',
+#                   './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
+#                   './data/ocr/00000026AI20160325020.jpg']
 #         fnames = ['./data/ocr/00000030AI20160329003.jpg']
          
 #         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
@@ -92,9 +103,9 @@ class FieldLocation(Findlines):
         res_imgs = []
         for fname in fnames:
             print("image {}".format(fname))
-#             self.find_fields(fname, raise_exception = False)
-            self.show_channels(fname)
-            res_imgs.append(self.stack_image_horizontal([self.hough_lines, self.gray, self.res]))
+            self.find_fields(fname, raise_exception = False)
+#             self.show_channels(fname)
+            res_imgs.append(self.stack_image_horizontal([self.hough_lines, self.field_name]))
            
         
         res_imgs = self.stack_image_vertical(res_imgs)
