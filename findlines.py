@@ -45,7 +45,7 @@ class Findlines(object):
             min_line_length = 70
             max_line_gap = 5
         else:
-            min_line_length = 115
+            min_line_length = 110
             max_line_gap = 3
         
         
@@ -155,7 +155,7 @@ class Findlines(object):
 
 
         img, gray, edges, hough_lines, left, right = self.get_verticle_lines(resized_img)
-#         print("line value,verticle {}, {}".format(left, right))
+        print("line value,verticle {}, {}".format(left, right))
          
         if (left is None) or (right is None):
             if raise_exception:
@@ -164,7 +164,7 @@ class Findlines(object):
             
         
         img, gray, edges, hough_lines, top, bottom = self.get_horizatal_lines(resized_img)
-#         print("line value, horizatal {}, {}".format(top, bottom))
+        print("line value, horizatal {}, {}".format(top, bottom))
         if (top is None) or (bottom is None):
             if raise_exception:
                 raise("ko")
@@ -240,15 +240,15 @@ class Findlines(object):
         return
         
     def run(self):
-        return self.save_all_regions()
+#         return self.save_all_regions()
         
-        fnames = ['./data/ocr/00000015AI20160324002.jpg']
+        fnames = ['./data/ocr/00000016AI20160127014.jpg']
 
         
-        fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
-                  './data/ocr/00000015AI20160127014.jpg','./data/ocr/00000026AI20160329003.jpg',
-                  './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
-                  './data/ocr/00000026AI20160325020.jpg']
+#         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
+#                   './data/ocr/00000015AI20160127014.jpg','./data/ocr/00000026AI20160329003.jpg',
+#                   './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
+#                   './data/ocr/00000026AI20160325020.jpg']
 #         fnames = ['./data/ocr/00000030AI20160329003.jpg']
          
 #         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
