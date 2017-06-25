@@ -55,6 +55,76 @@ class FieldLocation(Findlines):
         return
     def remove_edge_noise(self):
         return
+    def find_number(self, region):
+
+        field = region[:, 1380:]
+        
+        #downsample and use it for processing
+        self.rgb = cv2.pyrDown(field);
+        self.small = cv2.cvtColor(self.rgb,  cv2.COLOR_BGR2GRAY);
+
+        
+        #morphological gradient
+        morphKernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3));
+        self.grad = cv2.morphologyEx(self.small, cv2.MORPH_GRADIENT, morphKernel);
+        
+        #binarize
+    
+        thres, self.bw = cv2.threshold(self.grad, 0.0, 255.0, cv2.THRESH_BINARY | cv2.THRESH_OTSU);
+        
+        #Remvoe noise around edge
+        self.erosion = self.bw.copy()
+        pad = 5
+        self.erosion = self.bw.copy()
+        self.erosion[:,0:(pad)] = 0
+        self.erosion[:,-pad:] = 0
+        self.erosion[0:(pad), :] = 0
+        self.erosion[-(pad):, :] = 0
+        
+        
+        #connect horizontally oriented regions
+        morphKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 1));
+        self.connected = cv2.morphologyEx(self.erosion, cv2.MORPH_CLOSE, morphKernel);
+#         self.connected = self.erosion.copy()
+        
+#         self.find_rec(self.erosion)
+#          
+#          
+#          
+#         #find contours
+        im2, contours, hierarchy = cv2.findContours(self.connected.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+          
+          
+        self.res = self.rgb.copy()
+        mask = np.zeros(self.rgb.shape[:2], np.uint8)
+        self.contour = self.rgb.copy()
+          
+        # filter contours
+        x_top = []
+        y_top = []
+        x_bottom = []
+        y_bottom = []
+        for idx in range(0, len(contours)):
+            x, y, rect_width, rect_height = cv2.boundingRect(contours[idx])
+            if rect_height < 20 or rect_width < 20:
+                continue
+            
+            cv2.drawContours(mask, contours, idx, 255, cv2.FILLED)
+            cv2.drawContours(self.contour, contours, idx, (0,0,255))
+            
+            x_top.append(x)
+            y_top.append(y)
+            x_bottom.append(x + rect_width)
+            y_bottom.append(y + rect_height)
+       
+        
+        if len(x_top) != 0:  
+            x_top, y_top, x_bottom, y_bottom = self.adjust_rect(x_top[-1], y_top[-1], x_bottom[-1], y_bottom[-1], pad, self.rgb.shape[:2])
+            cv2.rectangle(self.res, (x_top, y_top ), (x_bottom, y_bottom ), (0,255,0),1)
+          
+          
+
+        return
     def find_rec(self, erosion):
 #         plt.imshow(erosion, cmap='gray')
         #find border in x direction
@@ -343,7 +413,8 @@ class FieldLocation(Findlines):
         self.hough_lines = hough_lines
 #         self.find_names(hough_lines.copy())
 #         self.find_sex(hough_lines.copy())
-        self.find_type(hough_lines.copy())
+#         self.find_type(hough_lines.copy())
+        self.find_number(hough_lines.copy())
         
 #         name_pos = 380
 #         sex_pos = 560
@@ -363,7 +434,7 @@ class FieldLocation(Findlines):
     def save_all_fields(self):
         expl = ExploreImages()
         fnames = expl.get_all_imags()
-        region_folder = './data/fields/type/'
+        region_folder = './data/fields/number/'
         if not os.path.exists(region_folder):
             os.makedirs(region_folder)
         count = 0
@@ -384,10 +455,10 @@ class FieldLocation(Findlines):
         fnames = ['./data/ocr/00000013AI20160329001.jpg']
 
         
-#         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
-#                   './data/ocr/00000015AI20160127014.jpg','./data/ocr/00000026AI20160329003.jpg',
-#                   './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
-#                   './data/ocr/00000026AI20160325020.jpg']
+        fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
+                  './data/ocr/00000015AI20160127014.jpg','./data/ocr/00000026AI20160329003.jpg',
+                  './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
+                  './data/ocr/00000026AI20160325020.jpg']
 #         fnames = ['./data/ocr/00000030AI20160329003.jpg']
          
 #         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
