@@ -74,7 +74,7 @@ class Findlines(object):
                         continue
                     if (math.fabs((x2-x1)/(y2-y1)) < eps):
                     
-                        print("line {}".format([x1,y1,x2,y2]))
+#                         print("line {}".format([x1,y1,x2,y2]))
                         line_values.append(x1)
                         #retain only the horiztal lines
                         cv2.line(line_image,(x1,y1),(x2,y2),(255,0,0),10)
@@ -84,7 +84,7 @@ class Findlines(object):
                         continue
                     if (math.fabs((y2-y1)/(x2-x1)) < eps):
                     
-                        print("line {}".format([x1,y1,x2,y2]))
+#                         print("line {}".format([x1,y1,x2,y2]))
                         line_values.append(y1)
                         #retain only the horiztal lines
                         cv2.line(line_image,(x1,y1),(x2,y2),(255,0,0),10)
@@ -155,7 +155,7 @@ class Findlines(object):
 
 
         img, gray, edges, hough_lines, left, right = self.get_verticle_lines(resized_img)
-        print("line value,verticle {}, {}".format(left, right))
+#         print("line value,verticle {}, {}".format(left, right))
          
         if (left is None) or (right is None):
             if raise_exception:
@@ -164,7 +164,7 @@ class Findlines(object):
             
         
         img, gray, edges, hough_lines, top, bottom = self.get_horizatal_lines(resized_img)
-        print("line value, horizatal {}, {}".format(top, bottom))
+#         print("line value, horizatal {}, {}".format(top, bottom))
         if (top is None) or (bottom is None):
             if raise_exception:
                 raise("ko")
