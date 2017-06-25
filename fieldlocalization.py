@@ -124,7 +124,7 @@ class FieldLocation(Findlines):
           
           
 
-        return
+        return  self.res
     def find_rec(self, erosion):
 #         plt.imshow(erosion, cmap='gray')
         #find border in x direction
@@ -244,7 +244,7 @@ class FieldLocation(Findlines):
           
         self.field_name = field
          
-        return
+        return self.res
     def find_type(self, region):
 
         field = region[:, 640:1230]
@@ -318,9 +318,8 @@ class FieldLocation(Findlines):
             cv2.rectangle(self.res, (x_top, y_top ), (x_bottom, y_bottom ), (0,255,0),1)
           
           
-        self.field_name = field
          
-        return
+        return self.res
     def adjust_rect(self, x_top, y_top, x_bottom, y_bottom, pad, shape):
         height, width = shape
         if x_top == pad:
@@ -374,6 +373,7 @@ class FieldLocation(Findlines):
         self.res = self.rgb.copy()
         mask = np.zeros(self.rgb.shape[:2], np.uint8)
         self.contour = self.rgb.copy()
+        
           
         # filter contours
         x_top = []
@@ -402,17 +402,17 @@ class FieldLocation(Findlines):
           
           
          
-        return
+        return self.res
     def find_fields(self, fname, raise_exception = True):
         img, gray,edges,hough_lines = self.find_lines(fname, raise_exception = raise_exception)
         
         self.fields = hough_lines.copy()
         
         self.hough_lines = hough_lines
-        self.find_names(hough_lines.copy())
-        self.find_sex(hough_lines.copy())
-        self.find_type(hough_lines.copy())
-#         self.find_number(hough_lines.copy())
+        name = self.find_names(hough_lines.copy())
+        sex = self.find_sex(hough_lines.copy())
+        type = self.find_type(hough_lines.copy())
+        number = self.find_number(hough_lines.copy())
         
 #         name_pos = 380
 #         sex_pos = 560
@@ -428,11 +428,11 @@ class FieldLocation(Findlines):
 #         cv2.line(self.fields,(name_pos,0),(name_pos,119),(255,0,0),10)
 #         cv2.line(self.fields,(sex_pos,0),(sex_pos,119),(255,0,0),10)
 #         cv2.line(self.fields,(type_pos,0),(type_pos,119),(255,0,0),10)
-        return
+        return name,sex,type,number,self.hough_lines
     def save_all_fields(self):
         expl = ExploreImages()
         fnames = expl.get_all_imags()
-        region_folder = './data/fields/type/'
+        region_folder = './data/fields/number/'
         if not os.path.exists(region_folder):
             os.makedirs(region_folder)
         count = 0
@@ -445,10 +445,29 @@ class FieldLocation(Findlines):
             
             
         return
+    def save_all_fields_per_image(self):
+        expl = ExploreImages()
+        fnames = expl.get_all_imags()
+        count = 0
+        for fname in fnames:
+            count += 1
+            print("{}, {}".format(count, fname))
+            region_folder = './data/result/' + os.path.basename(fname)[:-4] + '/'
+            if not os.path.exists(region_folder):
+                os.makedirs(region_folder)
+            field_names = ['name','sex', 'type', 'number', 'region']
+            res = self.find_fields(fname)
+            for name, img in zip(field_names, res):
+                file_path = region_folder + name + '.jpg'
+                plt.imsave(file_path, img[...,::-1])
+            
+            
+        return
     
     def run(self):
+        return self.save_all_fields_per_image()
         
-        return self.save_all_fields()
+#         return self.save_all_fields()
         
         fnames = ['./data/ocr/00000026AI20160325020.jpg']
 
