@@ -105,6 +105,68 @@ class FieldLocation(Findlines):
             cv2.line(hist_img, pt1,pt2,(0,0,255),thickness=3)
         
         return hist_img
+    def find_sex(self, region):
+        
+        field = region[:, 460:550]
+        
+        #downsample and use it for processing
+        self.rgb = cv2.pyrDown(field);
+        self.small = cv2.cvtColor(self.rgb,  cv2.COLOR_BGR2GRAY);
+        
+        #morphological gradient
+        morphKernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3));
+        self.grad = cv2.morphologyEx(self.small, cv2.MORPH_GRADIENT, morphKernel);
+        
+        #binarize
+    
+        thres, self.bw = cv2.threshold(self.grad, 0.0, 255.0, cv2.THRESH_BINARY | cv2.THRESH_OTSU);
+        
+        #Remvoe noise around edge
+        self.erosion = self.bw.copy()
+        pad = 5
+        self.erosion = self.bw.copy()
+        self.erosion[:,0:(pad)] = 0
+#         self.erosion[:,-pad:] = 0
+        self.erosion[0:(pad), :] = 0
+        self.erosion[-(pad):, :] = 0
+        
+        #connect horizontally oriented regions
+        self.connected = self.erosion.copy()
+#         #find contours
+        im2, contours, hierarchy = cv2.findContours(self.connected.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+          
+          
+        self.res = self.rgb.copy()
+        mask = np.zeros(self.rgb.shape[:2], np.uint8)
+        self.contour = self.rgb.copy()
+          
+        # filter contours
+        max_rect_area = None
+        max_x = 0
+        max_y=0
+        max_rect_width = 0
+        max_rect_height = 0
+        for idx in range(0, len(contours)):
+            x, y, rect_width, rect_height = cv2.boundingRect(contours[idx])
+            cv2.drawContours(self.contour, contours, idx, (0,0,255))
+            if rect_height < 22 or rect_width < 10:
+                continue
+            
+            cv2.drawContours(mask, contours, idx, 255, cv2.FILLED)
+           
+            if(max_rect_area is None or rect_width*rect_height > max_rect_area):
+                max_rect_area = rect_width*rect_height
+                max_x = x
+                max_y = y
+                max_rect_width = rect_width
+                max_rect_height = rect_height
+        if max_rect_area is not None:     
+            cv2.rectangle(self.res, (max_x, max_y+max_rect_height), (max_x+max_rect_width, max_y), (0,255,0),1)
+          
+          
+        self.field_name = field
+         
+        return
     def find_names(self, region):
         field_pos = 380
         field = self.fields[:, 65:380]
@@ -190,8 +252,10 @@ class FieldLocation(Findlines):
         img, gray,edges,hough_lines = self.find_lines(fname, raise_exception = raise_exception)
         
         self.fields = hough_lines.copy()
-        self.find_names(hough_lines.copy())
+        
         self.hough_lines = hough_lines
+        self.find_names(hough_lines.copy())
+        self.find_sex(hough_lines.copy())
         
 #         name_pos = 380
 #         sex_pos = 560
@@ -211,7 +275,7 @@ class FieldLocation(Findlines):
     def save_all_fields(self):
         expl = ExploreImages()
         fnames = expl.get_all_imags()
-        region_folder = './data/fields/name/'
+        region_folder = './data/fields/sex/'
         if not os.path.exists(region_folder):
             os.makedirs(region_folder)
         count = 0
@@ -226,17 +290,16 @@ class FieldLocation(Findlines):
         return
     
     def run(self):
-#         self.show_pixel_values()
         
-        return self.save_all_fields()
+#         return self.save_all_fields()
         
-        fnames = ['./data/ocr/00000031AI20160325010.jpg']
+        fnames = ['./data/ocr/00000016AI20160325010.jpg']
 
         
-        fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
-                  './data/ocr/00000015AI20160127014.jpg','./data/ocr/00000026AI20160329003.jpg',
-                  './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
-                  './data/ocr/00000026AI20160325020.jpg']
+#         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
+#                   './data/ocr/00000015AI20160127014.jpg','./data/ocr/00000026AI20160329003.jpg',
+#                   './data/ocr/00000031AI20160325010.jpg','./data/ocr/00000030AI20160329003.jpg',
+#                   './data/ocr/00000026AI20160325020.jpg']
 #         fnames = ['./data/ocr/00000030AI20160329003.jpg']
          
 #         fnames = ['./data/ocr/00000012AI20160328023.jpg','./data/ocr/00000015AI20160328023.jpg',
